@@ -107,6 +107,17 @@ class SurplusEmissions:
 
 
 @define
+class SurplusEmissionsTwoStep:
+    surplus_emissions_step_1: SurplusEmissions
+    surplus_emissions_step_2: SurplusEmissions
+    surplus_nox: float
+    surplus_rog: float
+    surplus_pm: float
+    weighted: float
+    unweighted: float
+
+
+@define
 class ProjectAlt:
     baseline_engine: list[Engine]
     reduced_engine: Engine
@@ -152,6 +163,20 @@ def round_down_hundred(number: int | float):
         int: Rounded number down to the nearest hundred.
     """
     return number - (number % 100)
+
+
+def calc_pot_grant_cel_2s(
+    cel_base,
+    cel_at,
+    surplus_base,
+    surplus_at,
+    project_life_step_1,
+    project_life_step_2,
+    i=0.01,
+):
+    s1 = cel_base * surplus_base / calc_crf(i, project_life_step_1)
+    s2 = cel_at * surplus_at / calc_crf(i, project_life_step_2)
+    return s1 + s2
 
 
 def calc_surplus_emissions(
@@ -225,6 +250,86 @@ def calc_surplus_emissions(
     )
 
     return emission_reductions
+
+
+def calc_surplus_emissions_2s(
+    baseline_engine: list[Engine],
+    reduced_engine: Engine,
+    start_year: int,
+    annual_activity: list[int],
+    percent_operation: list[int],
+    project_life_step_1: int,
+    project_life_step_2: int,
+):
+    # Current emission standards for new engines
+    CURRENT_STANDARD = {"ci": "t4f", "lsi-g": "c", "lsi-a": "c"}
+
+    # Get lowest hp
+    min_hp = min([engine.hp for engine in baseline_engine])
+
+    # Get lowest load factor
+    min_load_factor = min([engine.load_factor for engine in baseline_engine])
+
+    # Get engine type for step 1; pick based on cleanest
+    # LSI to CI is ineligible; assume lsi-a is cleaner than lsi-g
+    if all(
+        engine.engine_type == baseline_engine[0].engine_type
+        for engine in baseline_engine
+    ):
+        engine_type_s1 = baseline_engine[0].engine_type
+    elif "lsi-a" in [engine.engine_type for engine in baseline_engine]:
+        engine_type_s1 = "lsi-a"
+    else:
+        engine_type_s1 = "lsi-g"
+
+    # Step 1 reduced baseline information
+    reduced_baseline_engine = Engine(
+        id="Reduced Base",
+        engine_type=engine_type_s1,
+        year=start_year,
+        hp=min_hp,
+        load_factor=min_load_factor,
+        emission_standard=CURRENT_STANDARD[engine_type_s1],
+    )
+
+    # Step 1 reduced baseline
+    s1 = calc_surplus_emissions(
+        baseline_engine=baseline_engine,
+        reduced_engine=reduced_baseline_engine,
+        start_year=start_year,
+        annual_activity=annual_activity,
+        percent_operation=percent_operation,
+        project_life=project_life_step_1,
+    )
+
+    # Step 2 advanced technology
+    s2 = calc_surplus_emissions(
+        baseline_engine=[reduced_baseline_engine],
+        reduced_engine=reduced_engine,
+        start_year=start_year,
+        annual_activity=[sum(annual_activity)],
+        percent_operation=[
+            np.matmul(annual_activity, percent_operation) / sum(annual_activity)
+        ],
+        project_life=project_life_step_2,
+    )
+
+    surplus = SurplusEmissionsTwoStep(
+        surplus_emissions_step_1=s1,
+        surplus_emissions_step_2=s2,
+        surplus_nox=(s1.surplus_nox * s1.project_life / project_life_step_2)
+        + (s2.surplus_nox * s2.project_life / project_life_step_2),
+        surplus_rog=(s1.surplus_rog * s1.project_life / project_life_step_2)
+        + (s2.surplus_rog * s2.project_life / project_life_step_2),
+        surplus_pm=(s1.surplus_pm * s1.project_life / project_life_step_2)
+        + (s2.surplus_pm * s2.project_life / project_life_step_2),
+        weighted=(s1.weighted * s1.project_life / project_life_step_2)
+        + (s2.weighted * s2.project_life / project_life_step_2),
+        unweighted=(s1.unweighted * s1.project_life / project_life_step_2)
+        + (s2.unweighted * s2.project_life / project_life_step_2),
+    )
+
+    return surplus
 
 
 def min_annual_activity(

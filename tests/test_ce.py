@@ -84,8 +84,8 @@ def test_pot_grant_cel_2step():
         cel_at=100000,
         surplus_base=0.2812,
         surplus_at=0.0401,
-        project_life_s1=3,
-        project_life=10,
+        project_life_step_1=3,
+        project_life_step_2=10,
     )
 
     assert Decimal(str(pot_grant_cel)).quantize(
@@ -366,36 +366,34 @@ def test_example_6():
     red_standard = "ze"
     red_engine_my = 2018
 
-    base = ce.OffRoadEquipment(
-        unit_id="Baseline",
-        engine_id="1",
-        engine_my=emy,
+    base = ce.Engine(
+        id="1",
         engine_type=engine_type,
+        year=emy,
         hp=hp,
-        standard=standard,
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=load_factor,
+        emission_standard=standard,
     )
 
-    red = ce.OffRoadEquipment(
-        unit_id="Reduced",
-        engine_id="1",
+    red = ce.Engine(
+        id="1",
         engine_type=red_engine_type,
-        engine_my=red_engine_my,
+        year=red_engine_my,
         hp=red_hp,
-        standard=red_standard,
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=load_factor,
+        emission_standard=red_standard,
     )
 
     surplus = ce.calc_surplus_emissions_2s(
-        red_equip=red,
-        base_equip=base,
-        year_1=year_1,
-        load_factor=load_factor,
-        annual_activity=annual_activity,
-        percent_op=percent_op,
-        project_life_s1=project_life_s1,
-        project_life=project_life,
+        baseline_engine=[base],
+        reduced_engine=red,
+        start_year=year_1,
+        annual_activity=[annual_activity],
+        percent_operation=[percent_op],
+        project_life_step_1=project_life_s1,
+        project_life_step_2=project_life,
     )
+
     assert Decimal(str(surplus.weighted)).quantize(
         Decimal("1.0000"), rounding=ROUND_HALF_UP
     ) == Decimal("0.12351952256944444").quantize(
@@ -421,36 +419,34 @@ def test_example_7():
     red_standard = "ze"
     red_engine_my = 2018
 
-    base = ce.OffRoadEquipment(
-        unit_id="Baseline",
-        engine_id="1",
-        engine_my=emy,
+    base = ce.Engine(
+        id="1",
         engine_type=engine_type,
+        year=emy,
         hp=hp,
-        standard=standard,
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=load_factor,
+        emission_standard=standard,
     )
 
-    red = ce.OffRoadEquipment(
-        unit_id="Reduced",
-        engine_id="1",
+    red = ce.Engine(
+        id="1",
         engine_type=red_engine_type,
-        engine_my=red_engine_my,
+        year=red_engine_my,
         hp=red_hp,
-        standard=red_standard,
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=load_factor,
+        emission_standard=red_standard,
     )
 
     surplus = ce.calc_surplus_emissions_2s(
-        red_equip=red,
-        base_equip=base,
-        year_1=year_1,
-        load_factor=load_factor,
-        annual_activity=annual_activity,
-        percent_op=percent_op,
-        project_life_s1=project_life_s1,
-        project_life=project_life,
+        baseline_engine=[base],
+        reduced_engine=red,
+        start_year=year_1,
+        annual_activity=[annual_activity],
+        percent_operation=[percent_op],
+        project_life_step_1=project_life_s1,
+        project_life_step_2=project_life,
     )
+
     assert Decimal(str(surplus.weighted)).quantize(
         Decimal("1.0000"), rounding=ROUND_HALF_UP
     ) == Decimal("0.4710385185185186").quantize(
@@ -578,36 +574,34 @@ def test_example_10():
     red_standard = "ze"
     red_engine_my = 2017
 
-    base = ce.OffRoadEquipment(
-        unit_id="Baseline",
-        engine_id="1",
-        engine_my=emy,
+    base = ce.Engine(
+        id="1",
         engine_type=engine_type,
+        year=emy,
         hp=hp,
-        standard=standard,
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=load_factor,
+        emission_standard=standard,
     )
 
-    red = ce.OffRoadEquipment(
-        unit_id="Reduced",
-        engine_id="1",
+    red = ce.Engine(
+        id="1",
         engine_type=red_engine_type,
-        engine_my=red_engine_my,
+        year=red_engine_my,
         hp=red_hp,
-        standard=red_standard,
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=load_factor,
+        emission_standard=red_standard,
     )
 
     surplus = ce.calc_surplus_emissions_2s(
-        red_equip=red,
-        base_equip=base,
-        year_1=year_1,
-        load_factor=load_factor,
-        annual_activity=annual_activity,
-        percent_op=percent_op,
-        project_life_s1=project_life_s1,
-        project_life=project_life,
+        baseline_engine=[base],
+        reduced_engine=red,
+        start_year=year_1,
+        annual_activity=[annual_activity],
+        percent_operation=[percent_op],
+        project_life_step_1=project_life_s1,
+        project_life_step_2=project_life,
     )
+
     assert Decimal(str(surplus.weighted)).quantize(
         Decimal("1.0000"), rounding=ROUND_HALF_UP
     ) == Decimal("0.4564315476190476").quantize(
@@ -817,51 +811,88 @@ def test_example_2for1_min():
 
 def test_example_2for1_2step():
     # Example 4 reworked to two step
-    base = ce.OffRoadEquipment(
-        unit_id="Baseline Equipment 1",
-        engine_id="1",
-        engine_my=2005,
+    # base = ce.OffRoadEquipment(
+    #     unit_id="Baseline Equipment 1",
+    #     engine_id="1",
+    #     engine_my=2005,
+    #     engine_type="ci",
+    #     hp=240,
+    #     standard="t2",
+    #     emissions_table=EMISSIONS_TABLE,
+    # )
+
+    base = ce.Engine(
+        id="Baseline 1",
         engine_type="ci",
+        year=2005,
         hp=240,
-        standard="t2",
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=0.36,
+        emission_standard="t2",
     )
 
-    base2 = ce.OffRoadEquipment(
-        unit_id="Baseline Equipment 2",
-        engine_id="1",
-        engine_my=2004,
+    # base2 = ce.OffRoadEquipment(
+    #     unit_id="Baseline Equipment 2",
+    #     engine_id="1",
+    #     engine_my=2004,
+    #     engine_type="ci",
+    #     hp=180,
+    #     standard="t2",
+    #     emissions_table=EMISSIONS_TABLE,
+    # )
+
+    base2 = ce.Engine(
+        id="Baseline 2",
         engine_type="ci",
+        year=2004,
         hp=180,
-        standard="t2",
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=0.36,
+        emission_standard="t2",
     )
 
-    red = ce.OffRoadEquipment(
-        unit_id="Reduced Equipment ZE",
-        engine_id="1",
+    # red = ce.OffRoadEquipment(
+    #     unit_id="Reduced Equipment ZE",
+    #     engine_id="1",
+    #     engine_type="ze",
+    #     engine_my=2017,
+    #     hp=210,
+    #     standard="ze",
+    #     emissions_table=EMISSIONS_TABLE,
+    # )
+
+    red = ce.Engine(
+        id="Reduced ZE",
         engine_type="ze",
-        engine_my=2017,
+        year=2017,
         hp=210,
-        standard="ze",
-        emissions_table=EMISSIONS_TABLE,
+        load_factor=0.36,
+        emission_standard="ze",
     )
+
+    # surplus = ce.calc_surplus_emissions_2s(
+    #     red_equip=red,
+    #     base_equip=[base, base2],
+    #     year_1=2017,
+    #     load_factor=0.36,
+    #     annual_activity=[750, 350],
+    #     percent_op=[1, 1],
+    #     project_life_s1=3,
+    #     project_life=10,
+    #     verbose=True,
+    # )
 
     surplus = ce.calc_surplus_emissions_2s(
-        red_equip=red,
-        base_equip=[base, base2],
-        year_1=2017,
-        load_factor=0.36,
+        baseline_engine=[base, base2],
+        reduced_engine=red,
+        start_year=2017,
         annual_activity=[750, 350],
-        percent_op=[1, 1],
-        project_life_s1=3,
-        project_life=10,
-        verbose=True,
+        percent_operation=[1, 1],
+        project_life_step_1=3,
+        project_life_step_2=10,
     )
 
     # This is close to example 4's value. Difference is due to reduced
     # equipment being 180 hp instead of 210 hp.
-    assert Decimal(str(surplus.s1.weighted)).quantize(
+    assert Decimal(str(surplus.surplus_emissions_step_1.weighted)).quantize(
         Decimal("1.0000"), rounding=ROUND_HALF_UP
     ) == Decimal("0.687244892857143").quantize(
         Decimal("1.0000"), rounding=ROUND_HALF_UP
