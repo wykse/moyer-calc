@@ -2,6 +2,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from attrs import define, field
+import itertools
 
 
 EMISSIONS_TABLE = pd.read_csv(Path(__file__).parents[1] / "output/emission_factors.csv")
@@ -490,6 +491,47 @@ def min_annual_activity(
         )
 
     return hold_alt
+
+
+def calc_surplus_emissions_combinations(
+    baseline_engine: list[Engine],
+    reduced_engine: Engine,
+    start_year: int,
+    annual_activity: list[int],
+    percent_operation: list[int],
+    project_life_step_1: int,
+    project_life_step_2: int = 10,
+    r: int = 2,
+):
+    base_combos = list(itertools.combinations(baseline_engine))
+
+    # Hold surplus combos
+    surplus_combos = []
+
+    for base_combo in base_combos:
+        if reduced_engine.engine_type == "ze":
+            s = calc_surplus_emissions_2s(
+                baseline_engine=base_combo,
+                reduced_engine=reduced_engine,
+                start_year=start_year,
+                annual_activity=annual_activity,
+                percent_operation=percent_operation,
+                project_life_step_1=project_life_step_1,
+                project_life_step_2=project_life_step_2,
+            )
+        else:
+            s = calc_surplus_emissions(
+                baseline_engine=base_combo,
+                reduced_engine=reduced_engine,
+                start_year=start_year,
+                annual_activity=annual_activity,
+                percent_operation=percent_operation,
+                project_life=project_life_step_1,
+            )
+
+        surplus_combos.append(s)
+
+    return surplus_combos
 
 
 foo = Engine(
