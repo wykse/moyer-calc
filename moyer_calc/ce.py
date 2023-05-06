@@ -503,256 +503,41 @@ def calc_surplus_emissions_combinations(
     project_life_step_2: int = 10,
     r: int = 2,
 ):
-    base_combos = list(itertools.combinations(baseline_engine))
+    # Aggregate each baseline, activity, operation into a unit
+    base_act_per_zip = zip(
+        baseline_engine, annual_activity, percent_operation, strict=True
+    )
+
+    # Get combinations
+    base_act_per_combos = itertools.combinations(base_act_per_zip, r)
 
     # Hold surplus combos
     surplus_combos = []
 
-    for base_combo in base_combos:
+    for combo in base_act_per_combos:
+        # Unpack each unit's baseline, activity, operation in order to input into function
+        engines, activities, percent_ops = zip(*combo)
+
         if reduced_engine.engine_type == "ze":
             s = calc_surplus_emissions_2s(
-                baseline_engine=base_combo,
+                baseline_engine=engines,
                 reduced_engine=reduced_engine,
                 start_year=start_year,
-                annual_activity=annual_activity,
-                percent_operation=percent_operation,
+                annual_activity=activities,
+                percent_operation=percent_ops,
                 project_life_step_1=project_life_step_1,
                 project_life_step_2=project_life_step_2,
             )
         else:
             s = calc_surplus_emissions(
-                baseline_engine=base_combo,
+                baseline_engine=engines,
                 reduced_engine=reduced_engine,
                 start_year=start_year,
-                annual_activity=annual_activity,
-                percent_operation=percent_operation,
+                annual_activity=activities,
+                percent_operation=percent_ops,
                 project_life=project_life_step_1,
             )
 
         surplus_combos.append(s)
 
     return surplus_combos
-
-
-foo = Engine(
-    id="1",
-    engine_type="ci",
-    year=2000,
-    hp=120,
-    load_factor=0.51,
-    emission_standard="t0",
-)
-bar = Equipment(1, engine=foo)
-# print(bar.engine.emission_factors)
-# print(
-#     bar.engine.calc_annual_emissions(
-#         project_life=3,
-#         start_year=2023,
-#         annual_activity=200,
-#         percent_operation=0.75,
-#         baseline=True,
-#     )
-# )
-# baz = bar.engine.calc_annual_emissions(
-#     project_life=0,
-#     start_year=0,
-#     annual_activity=0,
-#     percent_operation=0,
-#     baseline=True,
-# )
-
-# print(baz)
-
-red = Engine(
-    id="1",
-    engine_type="ci",
-    year=2021,
-    hp=120,
-    load_factor=0.51,
-    emission_standard="t4f",
-)
-
-surplus = calc_surplus_emissions(
-    baseline_engine=[foo, foo],
-    reduced_engine=red,
-    start_year=2023,
-    annual_activity=[500, 300],
-    percent_operation=[1, 0.9],
-    project_life=5,
-)
-
-# print(surplus)
-
-
-engine_type = "ci"
-emy = 2005
-hp = 240
-standard = "t2"
-project_life = 3
-year_1 = 2017
-load_factor = 0.36
-annual_activity = 750
-percent_op = 1
-
-red_engine_type = "ci"
-red_hp = 210
-red_standard = "t4f"
-red_engine_my = 2017
-
-
-base = Engine(
-    id="1",
-    engine_type=engine_type,
-    year=emy,
-    hp=hp,
-    load_factor=load_factor,
-    emission_standard=standard,
-)
-
-
-base2 = Engine(
-    id="1",
-    engine_type="ci",
-    year=2004,
-    hp=180,
-    load_factor=load_factor,
-    emission_standard="t2",
-)
-
-
-red = Engine(
-    id="1",
-    engine_type=red_engine_type,
-    year=red_engine_my,
-    hp=red_hp,
-    load_factor=load_factor,
-    emission_standard=red_standard,
-)
-
-
-surplus = calc_surplus_emissions(
-    baseline_engine=[base, base2],
-    reduced_engine=red,
-    start_year=year_1,
-    annual_activity=[533, 248],
-    percent_operation=[percent_op, 1],
-    project_life=project_life,
-)
-
-
-min_act = min_annual_activity(
-    baseline_engine=[base, base2],
-    reduced_engine=red,
-    start_year=year_1,
-    annual_activity=[annual_activity, 350],
-    percent_operation=[percent_op, 1],
-    project_life=3,
-    ce_limit=30000,
-    cost_reduced_engine=50000,
-    max_percent=0.8,
-    rate=0.01,
-)
-
-
-engine_type = "ci"
-emy = 2006
-hp = 503
-standard = "t3"
-project_life = 5
-year_1 = 2017
-load_factor = 0.73
-annual_activity = 700
-percent_op = 1
-
-red_engine_type = "ci"
-red_hp = 500
-red_standard = "t4f"
-red_engine_my = 2017
-
-# base = OffRoadEquipment(
-#     unit_id="Baseline",
-#     engine_id="1",
-#     engine_my=emy,
-#     engine_type=engine_type,
-#     hp=hp,
-#     standard=standard,
-#     emissions_table=EMISSIONS_TABLE,
-# )
-
-# red = OffRoadEquipment(
-#     unit_id="Reduced",
-#     engine_id="1",
-#     engine_type=red_engine_type,
-#     engine_my=red_engine_my,
-#     hp=red_hp,
-#     standard=red_standard,
-#     emissions_table=EMISSIONS_TABLE,
-# )
-
-base = Engine(
-    id="1",
-    engine_type=engine_type,
-    year=emy,
-    hp=hp,
-    load_factor=load_factor,
-    emission_standard=standard,
-)
-
-red = Engine(
-    id="1",
-    engine_type=red_engine_type,
-    year=red_engine_my,
-    hp=red_hp,
-    load_factor=load_factor,
-    emission_standard=red_standard,
-)
-
-# surplus = calc_surplus_emissions(
-#     red_equip=red,
-#     base_equip=base,
-#     project_life=project_life,
-#     year_1=year_1,
-#     load_factor=load_factor,
-#     annual_activity=312,  # Minimum activity
-#     percent_op=percent_op,
-#     verbose=True,
-# )
-surplus = calc_surplus_emissions(
-    baseline_engine=[base],
-    reduced_engine=red,
-    start_year=year_1,
-    annual_activity=[312],
-    percent_operation=[percent_op],
-    project_life=project_life,
-)
-
-# min_act = min_annual_act(
-#     red_equip=red,
-#     base_equip=base,
-#     year_1=year_1,
-#     load_factor=load_factor,
-#     annual_activity=annual_activity,
-#     percent_op=percent_op,
-#     ce_limit=30000,
-#     cost_red_equip=92000,
-#     max_percent=0.85,
-#     rate=0.01,
-#     project_life=5,
-#     tol=1000,
-#     step=1,
-# )
-min_act = min_annual_activity(
-    baseline_engine=[base],
-    reduced_engine=red,
-    start_year=year_1,
-    annual_activity=[annual_activity],
-    percent_operation=[percent_op],
-    project_life=5,
-    ce_limit=30000,
-    cost_reduced_engine=92000,
-    max_percent=0.85,
-    rate=0.01,
-    iterations=20,
-)
-
-print(min_act)

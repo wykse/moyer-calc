@@ -626,25 +626,6 @@ def test_example_min():
     red_standard = "t4f"
     red_engine_my = 2017
 
-    # base = ce.OffRoadEquipment(
-    #     unit_id="Baseline",
-    #     engine_id="1",
-    #     engine_my=emy,
-    #     engine_type=engine_type,
-    #     hp=hp,
-    #     standard=standard,
-    #     emissions_table=EMISSIONS_TABLE,
-    # )
-
-    # red = ce.OffRoadEquipment(
-    #     unit_id="Reduced",
-    #     engine_id="1",
-    #     engine_type=red_engine_type,
-    #     engine_my=red_engine_my,
-    #     hp=red_hp,
-    #     standard=red_standard,
-    #     emissions_table=EMISSIONS_TABLE,
-    # )
 
     base = ce.Engine(
         id="1",
@@ -664,16 +645,7 @@ def test_example_min():
         emission_standard=red_standard,
     )
 
-    # surplus = ce.calc_surplus_emissions(
-    #     red_equip=red,
-    #     base_equip=base,
-    #     project_life=project_life,
-    #     year_1=year_1,
-    #     load_factor=load_factor,
-    #     annual_activity=312,  # Minimum activity
-    #     percent_op=percent_op,
-    #     verbose=True,
-    # )
+
     surplus = ce.calc_surplus_emissions(
         baseline_engine=[base],
         reduced_engine=red,
@@ -683,21 +655,7 @@ def test_example_min():
         project_life=project_life,
     )
 
-    # min_act = ce.min_annual_act(
-    #     red_equip=red,
-    #     base_equip=base,
-    #     year_1=year_1,
-    #     load_factor=load_factor,
-    #     annual_activity=annual_activity,
-    #     percent_op=percent_op,
-    #     ce_limit=30000,
-    #     cost_red_equip=92000,
-    #     max_percent=0.85,
-    #     rate=0.01,
-    #     project_life=5,
-    #     tol=1000,
-    #     step=1,
-    # )
+
     min_act = ce.min_annual_activity(
         baseline_engine=[base],
         reduced_engine=red,
@@ -811,15 +769,6 @@ def test_example_2for1_min():
 
 def test_example_2for1_2step():
     # Example 4 reworked to two step
-    # base = ce.OffRoadEquipment(
-    #     unit_id="Baseline Equipment 1",
-    #     engine_id="1",
-    #     engine_my=2005,
-    #     engine_type="ci",
-    #     hp=240,
-    #     standard="t2",
-    #     emissions_table=EMISSIONS_TABLE,
-    # )
 
     base = ce.Engine(
         id="Baseline 1",
@@ -830,16 +779,6 @@ def test_example_2for1_2step():
         emission_standard="t2",
     )
 
-    # base2 = ce.OffRoadEquipment(
-    #     unit_id="Baseline Equipment 2",
-    #     engine_id="1",
-    #     engine_my=2004,
-    #     engine_type="ci",
-    #     hp=180,
-    #     standard="t2",
-    #     emissions_table=EMISSIONS_TABLE,
-    # )
-
     base2 = ce.Engine(
         id="Baseline 2",
         engine_type="ci",
@@ -849,16 +788,6 @@ def test_example_2for1_2step():
         emission_standard="t2",
     )
 
-    # red = ce.OffRoadEquipment(
-    #     unit_id="Reduced Equipment ZE",
-    #     engine_id="1",
-    #     engine_type="ze",
-    #     engine_my=2017,
-    #     hp=210,
-    #     standard="ze",
-    #     emissions_table=EMISSIONS_TABLE,
-    # )
-
     red = ce.Engine(
         id="Reduced ZE",
         engine_type="ze",
@@ -867,18 +796,6 @@ def test_example_2for1_2step():
         load_factor=0.36,
         emission_standard="ze",
     )
-
-    # surplus = ce.calc_surplus_emissions_2s(
-    #     red_equip=red,
-    #     base_equip=[base, base2],
-    #     year_1=2017,
-    #     load_factor=0.36,
-    #     annual_activity=[750, 350],
-    #     percent_op=[1, 1],
-    #     project_life_s1=3,
-    #     project_life=10,
-    #     verbose=True,
-    # )
 
     surplus = ce.calc_surplus_emissions_2s(
         baseline_engine=[base, base2],
